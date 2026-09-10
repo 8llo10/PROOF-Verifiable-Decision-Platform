@@ -36,6 +36,20 @@ create index if not exists audit_decision_idx on public.audit_events(decision_id
 alter table public.decisions enable row level security;
 alter table public.audit_events enable row level security;
 
+-- Explicit deny policies make browser access intent unambiguous.
+drop policy if exists "deny_browser_decisions" on public.decisions;
+create policy "deny_browser_decisions" on public.decisions
+for all to anon, authenticated
+using (false)
+with check (false);
+
+drop policy if exists "deny_browser_audit_events" on public.audit_events;
+create policy "deny_browser_audit_events" on public.audit_events
+for all to anon, authenticated
+using (false)
+with check (false);
+
+-- App uses SERVICE ROLE on the server only. No browser table access is required.
 revoke all on public.decisions from anon, authenticated;
 revoke all on public.audit_events from anon, authenticated;
 grant all on public.decisions to service_role;
@@ -45,9 +59,13 @@ insert into storage.buckets (id, name, public, file_size_limit)
 values ('evidence','evidence',false,6291456)
 on conflict (id) do update set public=false, file_size_limit=6291456;
 
+-- Storage also stays private. The server uses the service role.
+
+-- Once approved, the evidence identity is immutable even if application code changes later.
 create or replace function public.protect_approved_evidence()
 returns trigger
 language plpgsql
+set search_path = public, pg_temp
 as $$
 begin
   if old.status = 'APPROVED' and (
@@ -70,9 +88,11 @@ for each row execute function public.protect_approved_evidence();
 revoke all on function public.protect_approved_evidence() from public, anon, authenticated;
 grant execute on function public.protect_approved_evidence() to service_role;
 
+-- Audit entries are database-generated so the state change and its audit event commit atomically.
 create or replace function public.write_decision_audit()
 returns trigger
 language plpgsql
+set search_path = public, pg_temp
 as $$
 begin
   if tg_op = 'INSERT' then
