@@ -1,0 +1,3 @@
+-- Optional DB demo record after schema.sql.
+-- The website already shows a built-in PR-1042 example when Supabase is not configured.
+-- Once Supabase is configured, create records from /dashboard so their hashes match real uploaded files.
