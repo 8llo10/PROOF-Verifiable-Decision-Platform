@@ -2,6 +2,7 @@ export type DecisionStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export type Decision = {
   id: string;
+  owner_id: string;
   code: string;
   title: string;
   summary: string;
