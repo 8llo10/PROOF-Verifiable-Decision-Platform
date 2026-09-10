@@ -1,120 +1,117 @@
 # PROOF — Verifiable Decision Integrity Platform
 
-PROOF turns informal operational approvals into verifiable decision records. Each record stores the original evidence metadata, a server-generated SHA-256 fingerprint, approval state, and an audit trail. A public verification page can recalculate a file fingerprint and prove whether it is byte-for-byte identical to the evidence that was recorded.
+**Arabic-first · English-ready · Real authentication · Real persistence · Public integrity verification**
 
-## Why it exists
+PROOF turns informal operational approvals into evidence-backed decision records. It is built for teams that make important decisions in chats, screenshots, PDFs and field conversations, then need to prove later **what was approved, by whom, when, and against which exact file**.
 
-Operational decisions often happen in chat messages, calls, screenshots, PDFs, and scattered files. When the decision is challenged later, teams need to answer four simple questions: what was approved, who was involved, when was it decided, and is this still the exact file that was approved?
+> PROOF verifies the integrity of the evidence file. It does not claim that the underlying business statement is truthful.
 
-PROOF makes that evidence chain explicit without becoming a full ERP, ticketing system, or workflow suite.
+## المنتج باختصار
 
-## Core flow
+بدل ما تضيع موافقة تشغيلية مهمة داخل واتساب أو صورة أو ملف معدل، PROOF يحفظ القرار كسجل مستقل مع الأطراف والمشروع والمبلغ والدليل الأصلي وبصمة SHA-256. بعد اعتماد القرار يصبح السجل نهائيًا، ويقدر أي شخص معه كود السجل يتحقق من القرار ويرفع نسخته من الملف للتأكد أنها مطابقة بايت-ببايت للدليل المعتمد — بدون كشف الملف الأصلي الخاص.
 
-1. An administrator creates a decision and uploads the original evidence.
-2. The server validates the request and computes the file's SHA-256 fingerprint.
-3. Evidence is stored in a private Supabase Storage bucket; the decision metadata is stored in PostgreSQL.
-4. The decision is approved or rejected and the action is appended to the audit trail.
-5. Once approved, a PostgreSQL trigger prevents mutation of the evidence identity fields.
-6. Anyone with the public record code can verify another copy of the file against the stored fingerprint.
+## Real product flow
 
-## Architecture
+1. Create a free account with Supabase Auth.
+2. Create a decision record with project/context, parties and optional amount.
+3. Upload the original evidence to a private per-user Storage folder.
+4. PROOF computes a SHA-256 fingerprint before persisting the record.
+5. Approve or reject the record; PostgreSQL writes the audit event atomically.
+6. Approved/rejected records become immutable at the database layer.
+7. Share the `PR-0000` verification code for approved records.
+8. Public visitors can inspect approved metadata and compare their own file copy locally against the stored SHA-256 fingerprint.
+
+## Product architecture
 
 ```text
-app/
-├── api/
-│   ├── decisions/               # HTTP endpoints only
-│   ├── health/                  # deployment health endpoint
-│   ├── login/                   # admin session
-│   ├── logout/
-│   └── verify-file/             # public integrity check
-├── dashboard/                   # protected admin UI
-├── decision/[id]/               # protected decision details
-├── verify/[code]/               # public verification record
-└── page.tsx                     # landing page
-
-components/                      # reusable UI components
-lib/
-├── decisions/
-│   ├── constants.ts             # domain limits/defaults
-│   ├── validation.ts            # boundary validation
-│   ├── repository.ts            # persistence operations
-│   └── service.ts               # business logic
-├── auth.ts                      # signed admin cookie
-├── data.ts                      # read models + demo fallback
-├── hash.ts                      # SHA-256 utility
-├── supabase-admin.ts            # server-only Supabase client
-└── types.ts                     # domain types
-
-supabase/
-└── schema.sql                   # tables, indexes, RLS, storage, integrity trigger
+Browser / Next.js UI
+├── Arabic / English interface (RTL + LTR)
+├── Supabase Auth session
+├── Web Crypto SHA-256
+├── Owner dashboard
+├── Decision creation + private evidence upload
+├── Approval / rejection controls
+└── Public verification
+        │
+        ▼
+Supabase
+├── Auth
+├── PostgreSQL
+│   ├── decisions
+│   ├── audit_events
+│   ├── owner-scoped RLS
+│   ├── approved-only anon verification
+│   └── terminal-record immutability trigger
+└── Private Storage
+    └── evidence/{auth.uid()}/...
 ```
 
 ## Stack
 
-- Next.js App Router + React + TypeScript
-- Supabase PostgreSQL + private Storage
-- Node.js `crypto` for SHA-256 and signed admin sessions
-- Vercel-ready deployment
-- Resilient built-in demo record for portfolio review
+- **Next.js 16** App Router
+- **React 19**
+- **TypeScript 5.9.2**
+- **Supabase Auth**
+- **Supabase PostgreSQL** with Row Level Security
+- **Supabase private Storage**
+- **Web Crypto API / SHA-256**
+- **Vercel / Netlify compatible**
 
-## Security and integrity choices
+## Security model
 
-- `SUPABASE_SERVICE_ROLE_KEY` is server-only and never exposed to the browser.
-- RLS is enabled and browser roles have no table access.
-- Evidence Storage is private.
-- File size and required fields are validated at the server boundary.
-- Admin access uses an HttpOnly, SameSite cookie signed with HMAC-SHA256.
-- Approved evidence identity (`hash`, `path`, `name`, `size`) is protected by a database trigger.
-- Verification compares the recalculated SHA-256 digest with the stored digest; files are never trusted by filename.
+PROOF does not require a `service_role` key in the frontend or deployment environment.
 
-## Run locally
+- The browser uses a Supabase **publishable key**, which is safe to expose by design.
+- Every decision has an `owner_id` linked to `auth.users`.
+- Authenticated users can read and manage only their own records.
+- New records must belong to `auth.uid()` and start as `PENDING`.
+- Evidence uploads are restricted to the authenticated user's top-level Storage folder.
+- The original evidence bucket is private.
+- Public/anonymous access can read **approved records only**.
+- Anonymous database privileges are limited to public verification columns; `owner_id` and `evidence_path` are not exposed.
+- Audit events are inserted by a database trigger, not by the client.
+- Approved and rejected records are terminal and immutable through a PostgreSQL trigger.
+- Public file comparison happens locally in the visitor's browser; the comparison file does not need to be uploaded to PROOF.
+- Supabase Security Advisor currently reports **0 security lints** for the configured project.
 
-```bash
-npm install
-cp .env.example .env.local
-npm run dev
-```
+## Main routes
 
-Without Supabase variables, PROOF intentionally starts in **Demo Mode** with the public record `PR-1042`. This makes the deployed portfolio demo resilient while keeping write operations disabled until a database is configured.
+| Route | Purpose |
+|---|---|
+| `/` | Bilingual product landing page |
+| `/login` | Sign in / create account |
+| `/dashboard` | Authenticated owner workspace |
+| `/dashboard/new` | Create a real decision record |
+| `/decision/[id]` | Owner detail, evidence, approval/rejection and audit trail |
+| `/verify` | Public code lookup |
+| `/verify/[code]` | Public approved-record integrity verification |
+| `/api/health` | Lightweight deployment health response |
 
-Default demo password: `proof-demo-2026`. When Supabase persistence is enabled, set `PROOF_ADMIN_PASSWORD` and `PROOF_COOKIE_SECRET`; PROOF refuses to fall back to demo credentials in connected mode.
+Use `?lang=ar` or `?lang=en` to switch the product interface. Arabic is the default experience.
 
-## Enable real persistence
+## Database
 
-Create a Supabase project, open SQL Editor, and run:
+The complete production schema is in:
 
 ```text
 supabase/schema.sql
 ```
 
-Then configure:
+It includes tables, indexes, RLS policies, private Storage policies, database-generated audit events and terminal-record immutability.
 
-```env
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVER_ONLY_SERVICE_ROLE_KEY
-PROOF_ADMIN_PASSWORD=choose-a-strong-password
-PROOF_COOKIE_SECRET=choose-a-long-random-secret
+## Local development
+
+```bash
+npm install
+npm run dev
 ```
 
-Never commit `.env.local`.
+The repository is connected to the production Supabase project through its public project URL and publishable key in `lib/supabase-browser.ts`. No server secret is required.
 
-## Useful routes
+## Integrity scope
 
-| Route | Purpose |
-|---|---|
-| `/` | Product landing page |
-| `/login` | Admin login |
-| `/dashboard` | Decisions dashboard |
-| `/dashboard/new` | Create a decision |
-| `/verify` | Find a public record |
-| `/verify/PR-1042` | Built-in demo record |
-| `/api/health` | Deployment health check |
-
-## Verification demo
-
-Download `public/demo-evidence.txt`, open `/verify/PR-1042`, and upload the file. The result should be `MATCH`. Change one character and upload it again; the result should be `MISMATCH`.
+A SHA-256 `MATCH` means the tested file is byte-for-byte identical to the fingerprint recorded with the approved decision. It does **not** independently validate whether the people, price, project or business claim inside the evidence are true.
 
 ## CV summary
 
-> Built a verifiable decision-integrity platform that converts informal operational approvals into evidence-backed records using SHA-256 file fingerprinting, immutable approved evidence, audit trails, private storage, and public integrity verification with Next.js, TypeScript, PostgreSQL, and Supabase.
+> Built a bilingual decision-integrity platform that converts informal operational approvals into evidence-backed records using Supabase Auth, owner-scoped PostgreSQL RLS, private file storage, SHA-256 fingerprinting, database-enforced immutable terminal records, audit trails, and public integrity verification with Next.js and TypeScript.
