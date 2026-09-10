@@ -1,24 +1,3 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { Plus, Search, ShieldCheck, Clock3, FileCheck2 } from "lucide-react";
-import { isAdmin } from "@/lib/auth";
-import { listDecisions } from "@/lib/data";
-import { StatusBadge } from "@/components/StatusBadge";
-import { Logo } from "@/components/Logo";
-
-export const dynamic = "force-dynamic";
-
-export default async function Dashboard() {
-  if (!(await isAdmin())) redirect("/login");
-  const decisions = await listDecisions();
-  const approved = decisions.filter(d=>d.status==="APPROVED").length;
-  const pending = decisions.filter(d=>d.status==="PENDING").length;
-  return <main className="app-bg">
-    <header className="app-header"><Link href="/"><Logo/></Link><nav><Link href="/verify"><Search size={16}/> Verify</Link><form action="/api/logout" method="post"><button>Sign out</button></form></nav></header>
-    <div className="app-container">
-      <div className="dashboard-head"><div><span className="eyebrow">DECISION CONTROL</span><h1>Evidence desk</h1><p>Capture the decision before the context disappears.</p></div><Link className="button button-primary" href="/dashboard/new"><Plus size={18}/> New decision</Link></div>
-      <div className="metrics"><div><ShieldCheck/><span>Approved</span><strong>{approved}</strong></div><div><Clock3/><span>Pending</span><strong>{pending}</strong></div><div><FileCheck2/><span>Total records</span><strong>{decisions.length}</strong></div></div>
-      <section className="table-card"><div className="table-head"><h2>Decision records</h2><span>{decisions.length} total</span></div><div className="decision-list">{decisions.map(d=><Link href={`/decision/${d.id}`} key={d.id} className="decision-row"><div className="code-box">{d.code}</div><div className="decision-main"><strong>{d.title}</strong><span>{d.project_name || "General"} · {new Date(d.created_at).toLocaleDateString("en-GB")}</span></div>{d.amount!==null && <div className="amount">{Number(d.amount).toLocaleString()} {d.currency}</div>}<StatusBadge status={d.status}/><span className="row-arrow">→</span></Link>)}</div></section>
-    </div>
-  </main>;
-}
+import Link from "next/link";import {redirect} from "next/navigation";import {Plus,Search,ShieldCheck,Clock3,FileCheck2,ArrowUpLeft,ArrowUpRight} from "lucide-react";import {isAdmin} from "@/lib/auth";import {listDecisions} from "@/lib/data";import {StatusBadge} from "@/components/StatusBadge";import {Logo} from "@/components/Logo";import {LanguageSwitch} from "@/components/LanguageSwitch";import {resolveLang,withLang,locale} from "@/lib/i18n";
+export const dynamic="force-dynamic";
+export default async function Dashboard({searchParams}:{searchParams:Promise<{lang?:string}>}){const q=await searchParams;const lang=resolveLang(q.lang);const ar=lang==="ar";if(!(await isAdmin()))redirect(withLang("/login",lang));const decisions=await listDecisions();const approved=decisions.filter(d=>d.status==="APPROVED").length;const pending=decisions.filter(d=>d.status==="PENDING").length;return <main className="app-bg" dir={ar?"rtl":"ltr"}><header className="app-header"><Link href={withLang("/",lang)}><Logo/></Link><nav><Link href={withLang("/verify",lang)}><Search size={16}/>{ar?"التحقق العام":"Public verify"}</Link><LanguageSwitch lang={lang}/><form action="/api/logout" method="post"><button>{ar?"تسجيل الخروج":"Sign out"}</button></form></nav></header><div className="app-container"><div className="dashboard-head"><div><span className="eyebrow">{ar?"مركز القرارات":"DECISION CONTROL"}</span><h1>{ar?"سجل القرارات":"Decision records"}</h1><p>{ar?"كل قرار مهم، دليله، حالته وبصمته في مكان واحد.":"Every important decision, its evidence, state and fingerprint in one place."}</p></div><Link className="button button-primary" href={withLang("/dashboard/new",lang)}><Plus size={18}/>{ar?"قرار جديد":"New decision"}</Link></div><div className="metrics"><div><ShieldCheck/><span>{ar?"معتمد":"Approved"}</span><strong>{approved}</strong></div><div><Clock3/><span>{ar?"بانتظار المراجعة":"Pending"}</span><strong>{pending}</strong></div><div><FileCheck2/><span>{ar?"إجمالي السجلات":"Total records"}</span><strong>{decisions.length}</strong></div></div><section className="table-card"><div className="table-head"><div><h2>{ar?"السجلات":"Records"}</h2><small>{ar?"اضغط على أي سجل لعرض الدليل وسجل التدقيق":"Open any record to inspect its evidence and audit trail"}</small></div><span>{decisions.length} {ar?"سجل":"records"}</span></div><div className="decision-list">{decisions.map(d=><Link href={withLang(`/decision/${d.id}`,lang)} key={d.id} className="decision-row"><div className="code-box">{d.code}</div><div className="decision-main"><strong>{d.title}</strong><span>{d.project_name||(ar?"عام":"General")} · {new Date(d.created_at).toLocaleDateString(locale(lang))}</span></div>{d.amount!==null&&<div className="amount">{Number(d.amount).toLocaleString(locale(lang))} {d.currency}</div>}<StatusBadge status={d.status} lang={lang}/><span className="row-arrow">{ar?<ArrowUpLeft size={17}/>:<ArrowUpRight size={17}/>}</span></Link>)}</div></section></div></main>}
