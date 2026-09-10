@@ -11,8 +11,8 @@ export default async function Home({searchParams}:{searchParams:Promise<{lang?:s
       <div className="hero-kicker"><span className="pulse" /> {ar?"طبقة نزاهة للقرارات التشغيلية":"DECISION INTEGRITY LAYER"}</div>
       <h1>{ar?<>لا تخلي قرار مهم<br/><em>يضيع داخل محادثة.</em></>:<>Don’t let an important decision<br/><em>disappear inside a chat.</em></>}</h1>
       <p className="hero-copy">{ar?"PROOF يحوّل الموافقات والقرارات التشغيلية غير الرسمية إلى سجل موثّق: القرار، الأطراف، الملف الأصلي، بصمة SHA-256، حالة الاعتماد وسجل تدقيق كامل.":"PROOF turns informal operational approvals into verifiable records with the decision, parties, original evidence, SHA-256 fingerprint, approval status and a complete audit trail."}</p>
-      <div className="hero-actions"><Link className="button button-primary" href={withLang("/dashboard",lang)}>{ar?"ابدأ من لوحة التحكم":"Open dashboard"} <ArrowRight size={18}/></Link><Link className="button button-ghost" href={withLang("/verify/PR-1042",lang)}>{ar?"جرّب التحقق المباشر":"See live verification"}</Link></div>
-      <div className="trust-line"><ShieldCheck size={17}/>{ar?"بدون Blockchain وبدون ادعاءات غامضة — دليل واضح + بصمة ملف قابلة للتحقق.":"No blockchain. No black box. Clear evidence + verifiable file integrity."}</div>
+      <div className="hero-actions"><Link className="button button-primary" href={withLang("/dashboard",lang)}>{ar?"ابدأ مجانًا":"Start free"} <ArrowRight size={18}/></Link><Link className="button button-ghost" href={withLang("/verify",lang)}>{ar?"تحقق من سجل":"Verify a record"}</Link></div>
+      <div className="trust-line"><ShieldCheck size={17}/>{ar?"حسابات حقيقية، ملفات خاصة، صلاحيات RLS، ودليل قابل للتحقق ببصمة SHA-256.":"Real accounts, private evidence, RLS access control and SHA-256 verification."}</div>
     </section>
 
     <section className="problem-band"><div className="container problem-grid">
@@ -23,7 +23,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{lang?:s
     <section className="container steps-section"><span className="eyebrow">{ar?"كيف يعمل PROOF":"HOW PROOF WORKS"}</span><h2 className="section-title">{ar?"قرار واحد. سجل واحد. بصمة واحدة.":"One decision. One record. One fingerprint."}</h2>
       <div className="steps">
         <article><MessageSquareText/><span>01</span><h3>{ar?"سجّل":"Capture"}</h3><p>{ar?"اكتب القرار بشكل واضح واربطه بالمشروع والأطراف والمبلغ.":"Capture the exact decision, context, parties and amount."}</p></article>
-        <article><Fingerprint/><span>02</span><h3>{ar?"ثبّت الدليل":"Fingerprint"}</h3><p>{ar?"ارفع الملف الأصلي ويحسب السيرفر بصمة SHA-256 قبل حفظ السجل.":"Upload the original evidence and compute its SHA-256 fingerprint server-side."}</p></article>
+        <article><Fingerprint/><span>02</span><h3>{ar?"ثبّت الدليل":"Fingerprint"}</h3><p>{ar?"ارفع الملف الأصلي وتُحسب له بصمة SHA-256 قبل حفظ السجل.":"Upload the original evidence and compute its SHA-256 fingerprint before storage."}</p></article>
         <article><CheckCircle2/><span>03</span><h3>{ar?"اعتمد":"Approve"}</h3><p>{ar?"اعتمد أو ارفض، مع وقت القرار وملاحظة واضحة وسجل تدقيق.":"Approve or reject with timestamp, note and audit trail."}</p></article>
         <article><FileLock2/><span>04</span><h3>{ar?"تحقق":"Verify"}</h3><p>{ar?"شارك كود السجل؛ ويمكن إعادة رفع أي نسخة للتأكد أنها مطابقة بايت-ببايت.":"Share the record code and verify any copy byte-for-byte."}</p></article>
       </div>
@@ -35,6 +35,6 @@ export default async function Home({searchParams}:{searchParams:Promise<{lang?:s
       <article><Building2/><h3>{ar?"المنشآت والفرق الداخلية":"Facilities & internal teams"}</h3><p>{ar?"أي قرار لازم يرجع له الفريق لاحقًا بدليل واضح بدل البحث في المحادثات.":"Any decision the team may need to defend later without digging through chats."}</p></article>
     </div></section>
 
-    <section className="cta-band"><div className="container cta-card"><FileCheck2/><div><span className="eyebrow">PROOF</span><h2>{ar?"إذا القرار يستحق التنفيذ، يستحق سجل يثبته.":"If a decision is worth executing, it is worth proving."}</h2></div><Link className="button button-primary" href={withLang("/dashboard",lang)}>{ar?"افتح المنتج":"Open product"}</Link></div></section>
+    <section className="cta-band"><div className="container cta-card"><FileCheck2/><div><span className="eyebrow">PROOF</span><h2>{ar?"إذا القرار يستحق التنفيذ، يستحق سجل يثبته.":"If a decision is worth executing, it is worth proving."}</h2></div><Link className="button button-primary" href={withLang("/login",lang)}>{ar?"إنشاء حساب":"Create account"}</Link></div></section>
   </main>;
 }
