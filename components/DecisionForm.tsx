@@ -88,7 +88,11 @@ export function DecisionForm({lang="ar"}:{lang?:Lang}) {
         { decision_id: createdId, owner_id:user.id, party_role:"INITIATOR", party_name:initiatorName, party_phone:initiatorPhone || null },
         { decision_id: createdId, owner_id:user.id, party_role:"COUNTERPARTY", party_name:counterpartyName, party_phone:counterpartyPhone || null },
       ]);
-      if (approvalsError) throw new Error(approvalsError.message);
+      if (approvalsError) {
+        await supabase.from("decisions").delete().eq("id",createdId).eq("status","PENDING");
+        await supabase.storage.from("evidence").remove([path]);
+        throw new Error(approvalsError.message);
+      }
 
       router.push(withLang(`/decision/${createdId}`,lang)); router.refresh();
     } catch (err) {
