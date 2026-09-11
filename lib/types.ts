@@ -1,4 +1,6 @@
 export type DecisionStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type ApprovalStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type PartyRole = "INITIATOR" | "COUNTERPARTY";
 
 export type Decision = {
   id: string;
@@ -16,9 +18,30 @@ export type Decision = {
   evidence_type: string | null;
   evidence_size: number | null;
   evidence_hash: string;
+  initiator_name: string | null;
+  initiator_phone: string | null;
+  counterparty_name: string | null;
+  counterparty_phone: string | null;
+  approval_completed_at: string | null;
   created_at: string;
   decided_at: string | null;
   decision_note: string | null;
+};
+
+export type ApprovalRequest = {
+  id: string;
+  decision_id: string;
+  owner_id: string;
+  party_role: PartyRole;
+  party_name: string;
+  party_phone: string | null;
+  party_email: string | null;
+  token: string;
+  status: ApprovalStatus;
+  note: string | null;
+  created_at: string;
+  responded_at: string | null;
+  expires_at: string;
 };
 
 export type AuditEvent = {
